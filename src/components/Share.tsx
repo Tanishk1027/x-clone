@@ -20,15 +20,21 @@ const Share = () => {
   });
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('called');
     if (e.target.files && e.target.files[0]) {
       setMedia(e.target.files[0]);
     }
   };
 
+  console.log(media);
+
   const previewURL = media ? URL.createObjectURL(media) : null;
 
   return (
-    <form className="p-4 flex gap-4" action={formData => shareAction(formData, settings)}>
+    <form
+      className="p-4 flex gap-4"
+      action={(formData) => shareAction(formData, settings)}
+    >
       {/* AVATAR */}
       <div className="w-10 h-10 rounded-full overflow-hidden">
         <ImageComp src="general/avatar.png" alt="" w={100} h={100} />
@@ -42,7 +48,7 @@ const Share = () => {
           className="bg-transparent outline-none placeholder:text-textGray"
         />
         {/* PREVIEW IMAGE */}
-        {previewURL && (
+        {media?.type.includes("image") && previewURL && (
           <div className="relative rounded-xl overflow-hidden">
             <Image
               src={previewURL}
@@ -63,6 +69,23 @@ const Share = () => {
             >
               Edit
             </div>
+            <div
+              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
+              onClick={() => setMedia(null)}
+            >
+              X
+            </div>
+          </div>
+        )}
+        {media?.type.includes("video") && previewURL && (
+          <div className="relative">
+            <video src={previewURL} controls />
+            <div
+              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white h-8 w-8 flex items-center justify-center rounded-full cursor-pointer font-bold text-sm"
+              onClick={() => setMedia(null)}
+            >
+              X
+            </div>
           </div>
         )}
         {isEditorOpen && previewURL && (
@@ -81,6 +104,7 @@ const Share = () => {
               id="file"
               className="hidden"
               name="file"
+              accept="image/*,video/*" // accept only images and video
             />
             <label htmlFor="file">
               <ImageComp
