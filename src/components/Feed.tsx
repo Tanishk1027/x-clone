@@ -1,20 +1,51 @@
-import React from 'react'
-import Post from './Post'
-import { prisma } from '@/prisma'
+import React from "react";
+import Post from "./Post";
+import { prisma } from "@/prisma";
+import { auth } from "@clerk/nextjs/server";
+import InfiniteFeed from "./InfiniteFeed";
 
-const Feed = async () => {
+const Feed = async ({ userProfileId }: { userProfileId?: string }) => {
+  const { userId } = await auth();
 
-  const posts = await prisma.post.findMany()
+  if (!userId) return;
+
+  const whereCondition = userProfileId
+    ? { parentPostId: null, userId: userProfileId }
+    : {
+        parentPostId: null,
+        userId: {
+          in: [
+            userId,
+            ...(
+              await prisma.follow.findMany({
+                where: { followerId: userId },
+                select: { followingId: true },
+              })
+            ).map((follow) => follow.followingId),
+          ],
+        },
+      };
+
+  const posts = await prisma.post.findMany({
+    where: whereCondition,
+    take: 3,
+    skip: 0,
+    orderBy: { createdAt: "desc" },
+  });
+
+  console.log({ posts });
 
   return (
-    <div className=''>
+    <div className="">
       {posts.map((posts) => (
         <div key={posts.id}>
-          <Post/>
+          <Post />
+          FROM SERVER
         </div>
       ))}
+      <InfiniteFeed userProfileId={userProfileId} />
     </div>
-  )
-}
+  );
+};
 
-export default Feed
+export default Feed;
